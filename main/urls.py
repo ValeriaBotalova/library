@@ -13,4 +13,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('reserve/<int:book_id>/', views.reserve_book, name='reserve_book'),
     path('cancel/<int:loan_id>/', views.cancel_reservation, name='cancel_reservation'),
+    path('return/<int:loan_id>/', views.return_book, name='return_book'),
 ]

@@ -1,4 +1,6 @@
+from django.utils import timezone 
 from django.db import models
+from datetime import datetime
 from django.core.validators import MinValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import UserManager
@@ -77,6 +79,7 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+    
 
 class BookLoan(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -96,6 +99,39 @@ class BookLoan(models.Model):
 
     def __str__(self):
         return f"{self.book} loaned to {self.reader}"
+    
+    def return_book(self):
+        """Метод для возврата книги"""
+        self.return_date = timezone.now().date()
+        self.status = LoanStatus.objects.get(status_name='returned')
+        self.save()
+
+        self.book.available_copies += 1
+        self.book.save()
+
+        BookHistory.objects.create(
+            book=self.book,
+            event_type='return',
+            details=f"Книга возвращена читателем {self.reader.full_name}"
+        )
+    
+    @property
+    def is_overdue(self):
+        """Проверяет, просрочена ли книга"""
+        due_date = self.due_date
+        if isinstance(due_date, datetime):
+            due_date = due_date.date()
+        if self.return_date is None and due_date < timezone.now().date():
+            return True
+        return False
+
+
+    
+    def save(self, *args, **kwargs):
+        """Автоматически обновляет статус при сохранении"""
+        if self.is_overdue and self.status.status_name != 'overdue':
+            self.status = LoanStatus.objects.get(status_name='overdue')
+        super().save(*args, **kwargs)
 
 class Fine(models.Model):
     loan = models.ForeignKey(BookLoan, on_delete=models.CASCADE)

@@ -12,7 +12,25 @@ from .forms import *
 
 @login_required
 def profile(request):
-    return render(request, 'profile.html')
+    active_loans = BookLoan.objects.filter(
+        reader=request.user,
+        return_date__isnull=True
+    ).select_related('book', 'book__author').order_by('due_date')[:5]
+    
+    favorite_genres = set(loan.book.genre for loan in active_loans if loan.book.genre)
+    
+
+    recommended_books = Book.objects.filter(
+        genre__in=favorite_genres,
+        available_copies__gt=0
+    ).exclude(
+        id__in=[loan.book.id for loan in active_loans]
+    ).order_by('?')[:2]  
+    
+    return render(request, 'profile.html', {
+        'active_loans': active_loans,
+        'recommended_books': recommended_books,
+    })
 
 @login_required
 def guide(request):
@@ -20,7 +38,12 @@ def guide(request):
 
 @login_required
 def my_loans(request):
-    loans = BookLoan.objects.filter(reader=request.user)
+    loans = BookLoan.objects.filter(reader=request.user).order_by('-loan_date')
+    for loan in loans.filter(return_date__isnull=True):
+        if loan.due_date < timezone.now().date():
+            loan.status = LoanStatus.objects.get(status_name='overdue')
+            loan.save()
+    
     return render(request, 'loans.html', {'loans': loans})
 
 @login_required
@@ -115,3 +138,15 @@ def cancel_reservation(request, loan_id):
     loan.delete()
     messages.success(request, "Бронирование отменено")
     return redirect('profile')
+
+@login_required
+def return_book(request, loan_id):
+    loan = get_object_or_404(BookLoan, pk=loan_id, reader=request.user)
+    
+    if loan.return_date is not None:
+        messages.warning(request, "Эта книга уже была возвращена")
+        return redirect('my_loans')
+    
+    loan.return_book()
+    messages.success(request, f"Книга '{loan.book.title}' успешно возвращена")
+    return redirect('my_loans')

@@ -3,6 +3,12 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Мои займы</h2>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
     <table class="table">
         <thead>
             <tr>
@@ -11,6 +17,7 @@
                 <th>Срок возврата</th>
                 <th>Дата возврата</th>
                 <th>Статус</th>
+                <th>Действия</th>
             </tr>
         </thead>
         <tbody>
@@ -20,11 +27,28 @@
                 <td>{{ loan.loan_date|date:"d.m.Y" }}</td>
                 <td>{{ loan.due_date|date:"d.m.Y" }}</td>
                 <td>{{ loan.return_date|date:"d.m.Y"|default:"-" }}</td>
-                <td>{{ loan.status.status_name }}</td>
+                <td>
+                    <span class="badge 
+                        {% if loan.status.status_name == 'active' %}bg-primary
+                        {% elif loan.status.status_name == 'overdue' %}bg-danger
+                        {% else %}bg-success{% endif %}">
+                        {{ loan.status.status_name }}
+                    </span>
+                </td>
+                <td>
+                    {% if loan.return_date is None %}
+                        <form method="post" action="{% url 'return_book' loan.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">Вернуть</button>
+                        </form>
+                    {% else %}
+                        <span class="text-muted">Возвращена</span>
+                    {% endif %}
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5">У вас нет займов</td>
+                <td colspan="6">У вас нет активных займов</td>
             </tr>
             {% endfor %}
         </tbody>
