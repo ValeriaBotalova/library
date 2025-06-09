@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4>{{ request.user.full_name }}</h4>
+                    <p class="text-muted">{{ request.user.email }}</p>
+                    <p>Дата регистрации: {{ request.user.registration_date|date:"d.m.Y" }}</p>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">Меню</div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'books' %}" class="list-group-item list-group-item-action">Библиотека</a>
+                    <a href="{% url 'my_loans' %}" class="list-group-item list-group-item-action">Мои книги</a>
+                    <a href="{% url 'my_fines' %}" class="list-group-item list-group-item-action">Мои штрафы</a>
+                    <a href="{% url 'guide' %}" class="list-group-item list-group-item-action">Справочник</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">Активные займы</div>
+                <div class="card-body">
+                    {% if active_loans %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Книга</th>
+                                    <th>Дата выдачи</th>
+                                    <th>Срок возврата</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in active_loans %}
+                                <tr>
+                                    <td>{{ loan.book.title }}</td>
+                                    <td>{{ loan.loan_date|date:"d.m.Y" }}</td>
+                                    <td>{{ loan.due_date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'cancel_reservation' loan.id %}" class="btn btn-sm btn-danger">Отменить</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>У вас нет активных займов</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

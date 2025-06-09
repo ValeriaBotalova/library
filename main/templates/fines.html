@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Мои штрафы</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Книга</th>
+                <th>Сумма</th>
+                <th>Дата начисления</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fine in fines %}
+            <tr>
+                <td>{{ fine.loan.book.title }}</td>
+                <td>{{ fine.amount }} руб.</td>
+                <td>{{ fine.issued_date|date:"d.m.Y" }}</td>
+                <td>{% if fine.paid %}Оплачен{% else %}Не оплачен{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">У вас нет штрафов</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

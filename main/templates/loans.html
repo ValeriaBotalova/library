@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Мои займы</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Книга</th>
+                <th>Дата выдачи</th>
+                <th>Срок возврата</th>
+                <th>Дата возврата</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr>
+                <td>{{ loan.book.title }}</td>
+                <td>{{ loan.loan_date|date:"d.m.Y" }}</td>
+                <td>{{ loan.due_date|date:"d.m.Y" }}</td>
+                <td>{{ loan.return_date|date:"d.m.Y"|default:"-" }}</td>
+                <td>{{ loan.status.status_name }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">У вас нет займов</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

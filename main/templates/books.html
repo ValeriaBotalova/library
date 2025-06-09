@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% if messages %}
+<div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Библиотека книг</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Автор</th>
+                <th>Жанр</th>
+                <th>Доступно</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author.full_name }}</td>
+                <td>{{ book.genre.name }}</td>
+                <td>{{ book.available_copies }}</td>
+                <td>
+                    {% if book in my_loans %}
+                        <span class="text-success">У вас на руках</span>
+                    {% elif book.available_copies > 0 %}
+                        <form method="post" action="{% url 'reserve_book' book.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">Забронировать</button>
+                        </form>
+                    {% else %}
+                        <span class="text-danger">Нет в наличии</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
